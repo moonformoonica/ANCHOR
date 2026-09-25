@@ -1,4 +1,28 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ANCHOR backend
+
+Laravel 12 REST API for human-reviewed case classification and routing. AI outputs remain drafts until a legal reviewer explicitly approves or edits them.
+
+## Setup
+
+Run `composer install`, copy `.env.example` to `.env`, configure Supabase PostgreSQL credentials, then run `php artisan migrate --seed`. For local PostgreSQL, run `docker compose up` after installing project dependencies in the app image or host environment. `POST /api/v1/auth/token` issues Sanctum tokens for seeded/admin-managed users.
+
+Victim endpoints require `Authorization: Bearer <secret-token>`. The secret is returned only by case creation, stored as a hash, and is never accepted in a URL or body.
+
+## Design notes
+
+- Every API access is recorded through `AuditCaseAccess`; it records route, actor, case ID, method, and response status without copying narrative or evidence content into general logs.
+- Reject actions require `reclassify_pending` or `manual_handling`. Reclassification writes a reviewer-attributed rejection record then runs the stub passes again; no terminal `rejected` status is used.
+- Queue triage computes a historical similarity score from approved, unedited cases. It can prioritize and suggest a one-click `approve`, but it never changes case state or writes a review. The reviewer must still submit the review action.
+- `review_recommendation_confidence` and its source-case column are reserved schema hooks for phase 2 evaluation. No fast-track or auto-approval behavior exists.
+- Replace the three stub bindings in `app/Providers/AppServiceProvider.php` with real service implementations when the AI stream is ready. Keep the same interfaces and have the integration write through the internal endpoint or `CaseProcessingService`.
+
+## API contract
+
+See [openapi.yaml](openapi.yaml). Reviewer and admin endpoints use Sanctum plus policies. The internal AI endpoint additionally requires a token with the `internal:ai` ability.
+
+## TODO
+
+`AGENTS.md` references `RTK.md`, but the file was never committed. Its contents were not inferred or recreated.
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>

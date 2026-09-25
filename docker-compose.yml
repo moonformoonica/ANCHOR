@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    working_dir: /var/www/html
+    volumes: [.:/var/www/html]
+    ports: ["8000:8000"]
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: anchor
+      DB_USERNAME: anchor
+      DB_PASSWORD: anchor
+    depends_on: [postgres]
+    command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: anchor
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+    ports: ["5432:5432"]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+  worker:
+    build: .
+    working_dir: /var/www/html
+    volumes: [.:/var/www/html]
+    depends_on: [postgres]
+    command: php artisan queue:work
+volumes:
+  postgres_data:

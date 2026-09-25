@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\LegalCorpusEntry;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +17,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
+        foreach (['admin', 'legal_reviewer'] as $role) {
+            Role::findOrCreate($role);
+        }
+        $admin = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+        $admin->assignRole('admin');
+        LegalCorpusEntry::firstOrCreate(
+            ['law_name' => 'UU ITE', 'pasal_reference' => 'Pasal 27 ayat (3)'],
+            ['status' => 'active', 'metadata' => ['seeded_for' => 'stub_ai']]
+        );
     }
 }

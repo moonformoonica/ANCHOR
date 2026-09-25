@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info: {title: ANCHOR API, version: 1.0.0}
+paths:
+  /api/v1/cases:
+    post: {summary: Create victim case, responses: {'201': {description: Case ID and one-time secret token}}}
+  /api/v1/cases/{public_case_id}:
+    get: {summary: Victim case status, security: [{VictimBearer: []}], responses: {'200': {description: Status, approved output only, and distress resources where flagged}}}
+  /api/v1/cases/{public_case_id}/evidence:
+    post: {summary: Add evidence, security: [{VictimBearer: []}], responses: {'201': {description: Evidence accepted}}}
+  /api/v1/review-queue:
+    get: {summary: Human review queue with triage-only ordering, security: [{Sanctum: []}], responses: {'200': {description: Queue}}}
+  /api/v1/cases/{id}:
+    get: {summary: Reviewer case detail, security: [{Sanctum: []}], responses: {'200': {description: Detail including raw passes}}}
+  /api/v1/cases/{id}/review:
+    post: {summary: Explicit reviewer approve, edit, or routed rejection, security: [{Sanctum: []}], responses: {'200': {description: Review recorded}}}
+  /api/v1/corpus:
+    get: {summary: List corpus, security: [{Sanctum: []}], responses: {'200': {description: Corpus entries}}}
+    post: {summary: Create corpus entry, security: [{Sanctum: []}], responses: {'201': {description: Created}}}
+  /api/v1/corpus/{id}:
+    patch: {summary: Update corpus entry, security: [{Sanctum: []}], responses: {'200': {description: Updated}}}
+  /api/v1/audit-log:
+    get: {summary: Query audit log, security: [{Sanctum: []}], responses: {'200': {description: Paginated audit entries}}}
+  /api/v1/internal/cases/{id}/ai-pass-result:
+    post: {summary: Internal AI pass write, security: [{Sanctum: []}], responses: {'201': {description: Stored}}}
+components:
+  securitySchemes:
+    VictimBearer: {type: http, scheme: bearer, description: One-time case token; header only.}
+    Sanctum: {type: http, scheme: bearer}
