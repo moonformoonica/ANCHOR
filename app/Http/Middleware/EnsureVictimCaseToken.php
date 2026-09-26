@@ -14,10 +14,11 @@ class EnsureVictimCaseToken
     {
         $token = $request->bearerToken();
         $case = CaseRecord::query()->where('public_case_id', $request->route('public_case_id'))->first();
-        if ($token === null || $case === null || !Hash::check($token, $case->token_hash)) {
+        if ($token === null || $case === null || ! Hash::check($token, $case->token_hash)) {
             abort(401, 'A valid bearer token is required for this case.');
         }
         $request->attributes->set('anchor.case', $case);
+
         return $next($request);
     }
 }

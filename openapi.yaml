@@ -1,6 +1,12 @@
 openapi: 3.0.3
 info: { title: ANCHOR API, version: 1.0.0 }
 paths:
+  /api/v1/auth/token:
+    post:
+      {
+        summary: Issue Sanctum token,
+        responses: { "200": { description: Bearer token issued }, "422": { description: Invalid credentials } },
+      }
   /api/v1/cases:
     post:
       {
@@ -17,9 +23,7 @@ paths:
           {
             "200":
               {
-                description: Status,
-                approved output only,
-                and distress resources where flagged,
+                description: "Status, approved output only, and distress resources where flagged",
               },
           },
       }
@@ -47,9 +51,7 @@ paths:
   /api/v1/cases/{id}/review:
     post:
       {
-        summary: Explicit reviewer approve,
-        edit,
-        or routed rejection,
+        summary: "Explicit reviewer approve, edit, or routed rejection",
         security: [{ Sanctum: [] }],
         responses: { "200": { description: Review recorded } },
       }
@@ -79,6 +81,26 @@ paths:
         summary: Query audit log,
         security: [{ Sanctum: [] }],
         responses: { "200": { description: Paginated audit entries } },
+      }
+  /api/v1/users:
+    get:
+      {
+        summary: List managed users,
+        security: [{ Sanctum: [] }],
+        responses: { "200": { description: Users and roles } },
+      }
+    post:
+      {
+        summary: Create managed user,
+        security: [{ Sanctum: [] }],
+        responses: { "201": { description: User created } },
+      }
+  /api/v1/users/{id}:
+    patch:
+      {
+        summary: Update managed user,
+        security: [{ Sanctum: [] }],
+        responses: { "200": { description: User updated } },
       }
   /api/v1/internal/cases/{id}/ai-pass-result:
     post:

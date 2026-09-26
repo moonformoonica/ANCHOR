@@ -10,9 +10,10 @@ class EnsureInternalAiAccess
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user() === null || !$request->user()->tokenCan('internal:ai')) {
+        if ($request->user() === null || ! $request->user()->tokenCan('internal:ai')) {
             abort(403, 'This endpoint requires an internal AI service token.');
         }
+
         return $next($request);
     }
 }

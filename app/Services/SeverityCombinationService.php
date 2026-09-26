@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AiPassResult;
 use App\Models\CaseRecord;
 use App\Models\SeverityScore;
 
@@ -44,7 +45,7 @@ class SeverityCombinationService
         return $score;
     }
 
-    private function latest(CaseRecord $case, string $passType): ?\App\Models\AiPassResult
+    private function latest(CaseRecord $case, string $passType): ?AiPassResult
     {
         return $case->aiPassResults()->where('pass_type', $passType)->latest('id')->first();
     }

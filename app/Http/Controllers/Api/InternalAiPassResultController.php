@@ -14,6 +14,7 @@ class InternalAiPassResultController extends Controller
     {
         $data = $request->validated();
         $result = $processing->record($case, $data['pass_type'], $data['raw_output'], $data['model_identifier']);
+
         return response()->json(['data' => $result], 201);
     }
 }

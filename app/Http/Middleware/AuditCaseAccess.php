@@ -14,7 +14,7 @@ class AuditCaseAccess
     {
         $response = $next($request);
         $case = $request->attributes->get('anchor.case');
-        if (!$case instanceof CaseRecord && $request->route('case') instanceof CaseRecord) {
+        if (! $case instanceof CaseRecord && $request->route('case') instanceof CaseRecord) {
             $case = $request->route('case');
         }
         $user = $request->user();
@@ -30,6 +30,7 @@ class AuditCaseAccess
             'details' => ['route' => $request->route()?->getName(), 'method' => $request->method(), 'response_status' => $response->getStatusCode()],
             'created_at' => now(),
         ]);
+
         return $response;
     }
 }

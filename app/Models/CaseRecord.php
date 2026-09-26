@@ -26,12 +26,43 @@ class CaseRecord extends Model
         return ['review_recommendation_confidence' => 'decimal:4'];
     }
 
-    public function narrative(): HasOne { return $this->hasOne(CaseNarrative::class, 'case_id'); }
-    public function evidenceItems(): HasMany { return $this->hasMany(EvidenceItem::class, 'case_id'); }
-    public function aiPassResults(): HasMany { return $this->hasMany(AiPassResult::class, 'case_id'); }
-    public function severityScore(): HasOne { return $this->hasOne(SeverityScore::class, 'case_id'); }
-    public function reviews(): HasMany { return $this->hasMany(Review::class, 'case_id'); }
-    public function citations(): BelongsToMany { return $this->belongsToMany(LegalCorpusEntry::class, 'classification_citations', 'case_id', 'legal_corpus_entry_id'); }
-    public function recommendationSource(): BelongsTo { return $this->belongsTo(self::class, 'review_recommendation_source_case_id'); }
-    public function scopePendingReview(Builder $query): Builder { return $query->where('status', 'pending_review'); }
+    public function narrative(): HasOne
+    {
+        return $this->hasOne(CaseNarrative::class, 'case_id');
+    }
+
+    public function evidenceItems(): HasMany
+    {
+        return $this->hasMany(EvidenceItem::class, 'case_id');
+    }
+
+    public function aiPassResults(): HasMany
+    {
+        return $this->hasMany(AiPassResult::class, 'case_id');
+    }
+
+    public function severityScore(): HasOne
+    {
+        return $this->hasOne(SeverityScore::class, 'case_id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'case_id');
+    }
+
+    public function citations(): BelongsToMany
+    {
+        return $this->belongsToMany(LegalCorpusEntry::class, 'classification_citations', 'case_id', 'legal_corpus_entry_id');
+    }
+
+    public function recommendationSource(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'review_recommendation_source_case_id');
+    }
+
+    public function scopePendingReview(Builder $query): Builder
+    {
+        return $query->where('status', 'pending_review');
+    }
 }

@@ -10,6 +10,7 @@ use App\Models\CaseRecord;
 use App\Services\CaseOutputService;
 use App\Services\CaseProcessingService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -25,9 +26,11 @@ class VictimCaseController extends Controller
             foreach ($request->input('evidence', []) as $item) {
                 $case->evidenceItems()->create([...$item, 'submitted_at' => now()]);
             }
+
             return $case;
         });
         $processing->process($case);
+
         return response()->json(['public_case_id' => $case->public_case_id, 'secret_token' => $token, 'message' => 'Store this token now. It cannot be retrieved later.'], 201);
     }
 
@@ -42,13 +45,15 @@ class VictimCaseController extends Controller
             $case->evidenceItems()->create([...$item, 'submitted_at' => now()]);
         }
         $processing->process($case->fresh());
+
         return response()->json(['message' => 'Evidence added and case reprocessed.'], 201);
     }
 
-    public function show(string $publicCaseId, \Illuminate\Http\Request $request, CaseOutputService $output): JsonResponse
+    public function show(string $publicCaseId, Request $request, CaseOutputService $output): JsonResponse
     {
         /** @var CaseRecord $case */
         $case = $request->attributes->get('anchor.case');
+
         return response()->json(array_filter([
             'public_case_id' => $case->public_case_id,
             'status' => $case->status,
