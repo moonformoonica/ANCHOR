@@ -4,7 +4,13 @@ Laravel 12 REST API for human-reviewed case classification and routing. AI outpu
 
 ## Setup
 
-Run `composer install`, copy `.env.example` to `.env`, configure Supabase PostgreSQL credentials, then run `php artisan migrate --seed`. For local PostgreSQL, run `docker compose up` after installing project dependencies in the app image or host environment. `POST /api/v1/auth/token` issues Sanctum tokens for seeded/admin-managed users.
+### Local development
+
+Run `docker compose build` and `docker compose up -d`. Compose starts the local Postgres/pgvector database, applies migrations, and waits for the API health check. Load the week-one legal and referral candidates with `docker compose exec app php artisan db:seed`; all entries intentionally remain unverified and are not eligible for victim-facing routing. Check `http://localhost:8000/up` and run `docker compose exec -T app php artisan test`.
+
+The local Docker database is for development only. Production must use the Supabase connection string supplied through deployment environment variables, then run migrations and seed only after reviewing the seed data for that environment. Never commit `.env`, API keys, or database passwords. The connection string in setup notes containing `[YOUR-PASSWORD]` is a placeholder and cannot connect until replaced locally with the database password; do not put it in source control.
+
+`POST /api/v1/auth/token` issues Sanctum tokens for seeded/admin-managed users.
 
 Victim endpoints require `Authorization: Bearer <secret-token>`. The secret is returned only by case creation, stored as a hash, and is never accepted in a URL or body.
 

@@ -11,8 +11,17 @@ services:
       DB_DATABASE: anchor
       DB_USERNAME: anchor
       DB_PASSWORD: anchor
-    depends_on: [postgres]
+      PHP_CLI_SERVER_WORKERS: 4
+    depends_on:
+      postgres:
+        condition: service_healthy
     command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/up"]
+      interval: 15s
+      timeout: 20s
+      retries: 10
+      start_period: 45s
   postgres:
     image: pgvector/pgvector:pg16
     environment:
@@ -21,11 +30,18 @@ services:
       POSTGRES_PASSWORD: anchor
     ports: ["5432:5432"]
     volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   worker:
     build: .
     working_dir: /var/www/html
     volumes: [.:/var/www/html]
-    depends_on: [postgres]
+    depends_on:
+      app:
+        condition: service_healthy
     command: php artisan queue:work
 volumes:
   postgres_data:

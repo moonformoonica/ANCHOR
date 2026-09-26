@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\LegalCorpusEntry;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -25,9 +24,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
         $admin->assignRole('admin');
-        LegalCorpusEntry::firstOrCreate(
-            ['law_name' => 'UU ITE', 'pasal_reference' => 'Pasal 27 ayat (3)'],
-            ['status' => 'active', 'metadata' => ['seeded_for' => 'stub_ai']]
-        );
+        $this->call([
+            LegalCorpusBaselineSeeder::class,
+            ReferralInstitutionBaselineSeeder::class,
+        ]);
     }
 }

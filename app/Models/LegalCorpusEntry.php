@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class LegalCorpusEntry extends Model
 {
-    protected $fillable = ['law_name', 'pasal_reference', 'status', 'metadata'];
+    protected $fillable = ['law_name', 'pasal_reference', 'status', 'last_verified_date', 'metadata'];
 
     protected function casts(): array
     {
-        return ['metadata' => 'array'];
+        return ['last_verified_date' => 'date', 'metadata' => 'array'];
     }
 
     public function cases(): BelongsToMany
