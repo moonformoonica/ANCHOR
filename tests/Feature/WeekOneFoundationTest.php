@@ -28,6 +28,21 @@ class WeekOneFoundationTest extends TestCase
             'pasal_reference' => 'Pasal 27 ayat (3)',
             'status' => 'active',
         ]);
+        $this->assertDatabaseHas('legal_corpus_entries', [
+            'law_name' => 'UU ITE (amended by UU No. 1/2024)',
+            'pasal_reference' => 'Pasal 27B ayat (2) jo. Pasal 45 ayat (10)',
+            'status' => 'under_review',
+        ]);
+        $this->assertDatabaseHas('legal_corpus_entries', [
+            'law_name' => 'KUHP Nasional (UU No. 1/2023)',
+            'pasal_reference' => 'Pasal 483',
+            'status' => 'under_review',
+        ]);
+        $this->assertDatabaseHas('legal_corpus_entries', [
+            'law_name' => 'Kode Etik AFPI Pedoman Perilaku 2023',
+            'pasal_reference' => 'Bab III.C.2',
+            'status' => 'under_review',
+        ]);
         $this->assertSame(4, ReferralInstitution::count());
         $this->assertSame(0, ReferralInstitution::where('status', 'active')->count());
         $this->assertNull(LegalCorpusEntry::first()->metadata['severity_weight']);
