@@ -36,6 +36,7 @@ class ReviewStateMachine
         } else {
             $case->update(['status' => 'reclassify_pending']);
             $this->processing->process($case->fresh(), $input['notes'] ?? null);
+            $case->update(['status' => 'reclassify_pending']);
         }
 
         return $review;

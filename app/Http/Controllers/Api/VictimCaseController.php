@@ -21,7 +21,12 @@ class VictimCaseController extends Controller
     {
         $token = Str::random(64);
         $case = DB::transaction(function () use ($request, $token) {
-            $case = CaseRecord::create(['public_case_id' => 'AC-'.Str::upper(Str::random(12)), 'token_hash' => Hash::make($token), 'status' => 'intake']);
+            $case = CaseRecord::create([
+                'public_case_id' => 'AC-'.Str::upper(Str::random(12)),
+                'token_hash' => Hash::make($token),
+                'token_expires_at' => now()->addDays(config('anchor.victim_token_ttl_days')),
+                'status' => 'intake',
+            ]);
             CaseNarrative::create(['case_id' => $case->id, 'narrative_text' => $request->string('narrative'), 'submitted_at' => now()]);
             foreach ($request->input('evidence', []) as $item) {
                 $case->evidenceItems()->create([...$item, 'submitted_at' => now()]);
@@ -29,6 +34,7 @@ class VictimCaseController extends Controller
 
             return $case;
         });
+        $request->attributes->set('anchor.case', $case);
         $processing->process($case);
 
         return response()->json(['public_case_id' => $case->public_case_id, 'secret_token' => $token, 'message' => 'Store this token now. It cannot be retrieved later.'], 201);

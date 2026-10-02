@@ -17,13 +17,16 @@ class CaseRecord extends Model
     protected $table = 'cases';
 
     protected $fillable = [
-        'public_case_id', 'token_hash', 'status', 'review_recommendation_confidence',
+        'public_case_id', 'token_hash', 'token_expires_at', 'status', 'review_recommendation_confidence',
         'review_recommendation_source_case_id',
     ];
 
     protected function casts(): array
     {
-        return ['review_recommendation_confidence' => 'decimal:4'];
+        return [
+            'review_recommendation_confidence' => 'decimal:4',
+            'token_expires_at' => 'datetime',
+        ];
     }
 
     public function narrative(): HasOne
