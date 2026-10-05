@@ -15,6 +15,13 @@ class WeekOneFoundationTest extends TestCase
     {
         $this->assertSame('sqlite', config('database.default'));
 
+        LegalCorpusEntry::create([
+            'law_name' => 'UU ITE',
+            'pasal_reference' => 'Pasal 27 ayat (3)',
+            'status' => 'active',
+            'metadata' => ['legacy' => true],
+        ]);
+
         $this->seed();
 
         $this->assertDatabaseHas('legal_corpus_entries', [
@@ -23,10 +30,16 @@ class WeekOneFoundationTest extends TestCase
             'status' => 'under_review',
             'last_verified_date' => null,
         ]);
-        $this->assertDatabaseMissing('legal_corpus_entries', [
+        $this->assertDatabaseHas('legal_corpus_entries', [
             'law_name' => 'UU ITE',
             'pasal_reference' => 'Pasal 27 ayat (3)',
-            'status' => 'active',
+            'status' => 'superseded',
+        ]);
+        $this->assertDatabaseHas('legal_corpus_entries', [
+            'law_name' => 'UU ITE (amended by UU No. 1/2024)',
+            'pasal_reference' => 'Pasal 26 ayat (1)',
+            'status' => 'under_review',
+            'last_verified_date' => null,
         ]);
         $this->assertDatabaseHas('legal_corpus_entries', [
             'law_name' => 'UU ITE (amended by UU No. 1/2024)',
@@ -45,6 +58,9 @@ class WeekOneFoundationTest extends TestCase
         ]);
         $this->assertSame(4, ReferralInstitution::count());
         $this->assertSame(0, ReferralInstitution::where('status', 'active')->count());
-        $this->assertNull(LegalCorpusEntry::first()->metadata['severity_weight']);
+        $this->assertNull(LegalCorpusEntry::query()
+            ->where('law_name', 'UU PDP No. 27/2022')
+            ->where('pasal_reference', 'Pasal 65 ayat (2)')
+            ->firstOrFail()->metadata['severity_weight']);
     }
 }

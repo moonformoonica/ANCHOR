@@ -12,6 +12,7 @@ class LegalCorpusBaselineSeeder extends Seeder
         $entries = [
             ['UU PDP No. 27/2022', 'Pasal 65 ayat (2)', 'primary_candidate'],
             ['UU PDP No. 27/2022', 'Pasal 67 ayat (2)', 'penalty_candidate'],
+            ['UU ITE (amended by UU No. 1/2024)', 'Pasal 26 ayat (1)', 'personal_data_processing_basis_review_required'],
             ['UU ITE (amended by UU No. 1/2024)', 'Pasal 29 jo. Pasal 45B', 'direct-threat_candidate'],
             ['UU ITE (amended by UU No. 1/2024)', 'Pasal 27A jo. Pasal 45 ayat (4)', 'transition_review_required'],
             ['UU ITE (amended by UU No. 1/2024)', 'Pasal 27B ayat (2) jo. Pasal 45 ayat (10)', 'weak_candidate_directional_mismatch'],
@@ -38,6 +39,22 @@ class LegalCorpusBaselineSeeder extends Seeder
                     ],
                 ]
             );
+        }
+
+        $legacyEntry = LegalCorpusEntry::query()
+            ->where('law_name', 'UU ITE')
+            ->where('pasal_reference', 'Pasal 27 ayat (3)')
+            ->first();
+
+        if ($legacyEntry !== null) {
+            $legacyEntry->update([
+                'status' => 'superseded',
+                'metadata' => [
+                    ...($legacyEntry->metadata ?? []),
+                    'baseline' => 'week_1_v0.2',
+                    'superseded_reason' => 'Legacy UU ITE numbering before UU No. 1/2024; do not use as a current citation.',
+                ],
+            ]);
         }
     }
 }

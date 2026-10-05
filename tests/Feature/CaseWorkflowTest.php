@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\CaseRecord;
-use App\Models\LegalCorpusEntry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -18,7 +17,6 @@ class CaseWorkflowTest extends TestCase
         parent::setUp();
         Role::create(['name' => 'legal_reviewer']);
         Role::create(['name' => 'admin']);
-        LegalCorpusEntry::create(['law_name' => 'UU ITE', 'pasal_reference' => 'Pasal 27 ayat (3)', 'status' => 'active']);
     }
 
     public function test_victim_token_is_bearer_only_and_final_output_requires_approval(): void
@@ -27,6 +25,20 @@ class CaseWorkflowTest extends TestCase
         $this->getJson('/api/v1/cases/'.$created['public_case_id'])->assertUnauthorized();
         $this->withHeader('Authorization', 'Bearer '.$created['secret_token'])->getJson('/api/v1/cases/'.$created['public_case_id'])
             ->assertOk()->assertJsonPath('status', 'pending_review')->assertJsonMissingPath('final_output');
+
+        $reviewer = User::factory()->create();
+        $reviewer->assignRole('legal_reviewer');
+        $caseId = CaseRecord::query()->where('public_case_id', $created['public_case_id'])->value('id');
+        $this->actingAs($reviewer, 'sanctum')
+            ->postJson('/api/v1/cases/'.$caseId.'/review', ['action' => 'approve'])
+            ->assertOk();
+
+        $this->withHeader('Authorization', 'Bearer '.$created['secret_token'])
+            ->getJson('/api/v1/cases/'.$created['public_case_id'])
+            ->assertOk()
+            ->assertJsonPath('final_output.classification', 'unclassified_pending_legal_review')
+            ->assertJsonPath('final_output.citations', []);
+        $this->assertSame($caseId, CaseRecord::query()->where('public_case_id', $created['public_case_id'])->value('id'));
     }
 
     public function test_rejection_requires_a_route_and_reclassification_returns_to_review(): void
