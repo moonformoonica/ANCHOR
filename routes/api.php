@@ -14,8 +14,8 @@ Route::prefix('v1')->group(function (): void {
     Route::post('auth/token', [AuthController::class, 'token'])->name('auth.token');
     Route::post('cases', [VictimCaseController::class, 'store'])->name('victim.cases.store');
     Route::middleware('victim.case')->group(function (): void {
-        Route::post('cases/{public_case_id}/evidence', [VictimCaseController::class, 'addEvidence'])->name('victim.cases.evidence');
-        Route::get('cases/{public_case_id}', [VictimCaseController::class, 'show'])->name('victim.cases.show');
+        Route::post('cases/{public_case_id}/evidence', [VictimCaseController::class, 'addEvidence'])->where('public_case_id', 'AC-[A-Za-z0-9]+')->name('victim.cases.evidence');
+        Route::get('cases/{public_case_id}', [VictimCaseController::class, 'show'])->where('public_case_id', 'AC-[A-Za-z0-9]+')->name('victim.cases.show');
     });
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('review-queue', [ReviewQueueController::class, 'index'])->name('review.queue');

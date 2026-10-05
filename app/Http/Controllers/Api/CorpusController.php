@@ -20,14 +20,18 @@ class CorpusController extends Controller
     public function store(StoreCorpusRequest $request): JsonResponse
     {
         $this->authorize('create', LegalCorpusEntry::class);
+        $data = $request->validated();
+        unset($data['change_reason']);
 
-        return response()->json(['data' => LegalCorpusEntry::create($request->validated())], 201);
+        return response()->json(['data' => LegalCorpusEntry::create($data)], 201);
     }
 
     public function update(UpdateCorpusRequest $request, LegalCorpusEntry $corpus): JsonResponse
     {
         $this->authorize('update', $corpus);
-        $corpus->update($request->validated());
+        $data = $request->validated();
+        unset($data['change_reason']);
+        $corpus->update($data);
 
         return response()->json(['data' => $corpus]);
     }

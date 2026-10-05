@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AiPassResult;
+use App\Models\AuditLog;
 use App\Models\CaseRecord;
 use App\Models\EvidenceItem;
 use App\Models\Review;
@@ -72,6 +73,40 @@ class ComplianceCriticalPathsTest extends TestCase
         $this->assertDatabaseHas('audit_log', [
             'actor_type' => 'victim', 'actor_id' => null, 'action' => 'POST victim.cases.evidence', 'case_id' => $case->id,
         ]);
+    }
+
+    public function test_legal_corpus_create_and_update_audit_actor_values_and_change_reason(): void
+    {
+        $admin = $this->userWithRole('admin');
+
+        $created = $this->actingAs($admin, 'sanctum')->postJson('/api/v1/corpus', [
+            'law_name' => 'UU PDP No. 27/2022',
+            'pasal_reference' => 'Pasal 65 ayat (2)',
+            'status' => 'under_review',
+            'metadata' => ['severity_weight' => null],
+            'change_reason' => 'Add baseline candidate pending legal partner review.',
+        ])->assertCreated()->json('data');
+
+        $createAudit = AuditLog::query()->where('action', 'POST corpus.store')->latest('id')->firstOrFail();
+        $this->assertSame('admin', $createAudit->actor_type);
+        $this->assertSame($admin->id, $createAudit->actor_id);
+        $this->assertSame('legal_corpus_entry', $createAudit->details['resource_type']);
+        $this->assertSame($created['id'], $createAudit->details['resource_id']);
+        $this->assertNull($createAudit->details['changes']['before']);
+        $this->assertSame('under_review', $createAudit->details['changes']['after']['status']);
+        $this->assertSame('Add baseline candidate pending legal partner review.', $createAudit->details['change_reason']);
+
+        $this->actingAs($admin, 'sanctum')->patchJson('/api/v1/corpus/'.$created['id'], [
+            'status' => 'superseded',
+            'change_reason' => 'Replace with a verified and current corpus reference.',
+        ])->assertOk();
+
+        $updateAudit = AuditLog::query()->where('action', 'PATCH corpus.update')->latest('id')->firstOrFail();
+        $this->assertSame($admin->id, $updateAudit->actor_id);
+        $this->assertSame($created['id'], $updateAudit->details['resource_id']);
+        $this->assertSame('under_review', $updateAudit->details['changes']['before']['status']);
+        $this->assertSame('superseded', $updateAudit->details['changes']['after']['status']);
+        $this->assertSame('Replace with a verified and current corpus reference.', $updateAudit->details['change_reason']);
     }
 
     public function test_rejection_routes_to_reclassification_or_manual_handling_only(): void

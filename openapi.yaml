@@ -57,24 +57,36 @@ paths:
       }
   /api/v1/corpus:
     get:
-      {
-        summary: List corpus,
-        security: [{ Sanctum: [] }],
-        responses: { "200": { description: Corpus entries } },
-      }
+      summary: List legal corpus entries
+      security:
+        - Sanctum: []
+      responses:
+        "200": { description: Corpus entries }
     post:
-      {
-        summary: Create corpus entry,
-        security: [{ Sanctum: [] }],
-        responses: { "201": { description: Created } },
-      }
+      summary: Create legal corpus entry and record reason in audit log
+      security:
+        - Sanctum: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusEntryCreate'
+      responses:
+        "201": { description: Created }
   /api/v1/corpus/{id}:
     patch:
-      {
-        summary: Update corpus entry,
-        security: [{ Sanctum: [] }],
-        responses: { "200": { description: Updated } },
-      }
+      summary: Update legal corpus entry and record before and after values in audit log
+      security:
+        - Sanctum: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusEntryUpdate'
+      responses:
+        "200": { description: Updated }
   /api/v1/audit-log:
     get:
       {
@@ -118,3 +130,24 @@ components:
         description: One-time case token; header only.,
       }
     Sanctum: { type: http, scheme: bearer }
+  schemas:
+    CorpusEntryCreate:
+      type: object
+      required: [law_name, pasal_reference, status, change_reason]
+      properties:
+        law_name: { type: string, maxLength: 255 }
+        pasal_reference: { type: string, maxLength: 255 }
+        status: { type: string, enum: [active, superseded, under_review] }
+        last_verified_date: { type: string, format: date, nullable: true }
+        metadata: { type: object, nullable: true, additionalProperties: true }
+        change_reason: { type: string, maxLength: 1000 }
+    CorpusEntryUpdate:
+      type: object
+      required: [change_reason]
+      properties:
+        law_name: { type: string, maxLength: 255 }
+        pasal_reference: { type: string, maxLength: 255 }
+        status: { type: string, enum: [active, superseded, under_review] }
+        last_verified_date: { type: string, format: date, nullable: true }
+        metadata: { type: object, nullable: true, additionalProperties: true }
+        change_reason: { type: string, maxLength: 1000 }

@@ -6,6 +6,13 @@ class UpdateCorpusRequest extends StoreCorpusRequest
 {
     public function rules(): array
     {
-        return ['law_name' => ['sometimes', 'string', 'max:255'], 'pasal_reference' => ['sometimes', 'string', 'max:255'], 'status' => ['sometimes', 'in:active,superseded,under_review'], 'metadata' => ['nullable', 'array']];
+        return [
+            'law_name' => ['sometimes', 'string', 'max:255'],
+            'pasal_reference' => ['sometimes', 'string', 'max:255'],
+            'status' => ['sometimes', 'in:active,superseded,under_review'],
+            'last_verified_date' => ['sometimes', 'nullable', 'date'],
+            'metadata' => ['sometimes', 'nullable', 'array'],
+            'change_reason' => ['required', 'string', 'max:1000'],
+        ];
     }
 }
