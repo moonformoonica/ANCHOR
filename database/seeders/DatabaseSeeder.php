@@ -19,10 +19,13 @@ class DatabaseSeeder extends Seeder
         foreach (['admin', 'legal_reviewer'] as $role) {
             Role::findOrCreate($role);
         }
-        $admin = User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // firstOrCreate keeps `db:seed` re-runnable. Building the attributes from
+        // the factory preserves the same password/verification defaults the factory
+        // sets, without inserting a duplicate row on a second run.
+        $admin = User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            User::factory()->raw(['name' => 'Test User', 'email' => 'test@example.com']),
+        );
         $admin->assignRole('admin');
         $this->call([
             LegalCorpusBaselineSeeder::class,

@@ -18,6 +18,14 @@ class CaseProcessingService
         private SeverityCombinationService $combination,
     ) {}
 
+    /**
+     * Run a full orchestration of the three AI passes and requeue the case for review.
+     *
+     * This is the only path that owns the "back to pending_review" transition, and
+     * it is reached only from an explicit actor action: victim intake, a victim
+     * submitting more evidence, or a reviewer requesting reclassification. Storing
+     * a single AI pass through record() deliberately does not move the case.
+     */
     public function process(CaseRecord $case, ?string $reviewContext = null): void
     {
         $case->update(['status' => 'processing']);
@@ -26,9 +34,18 @@ class CaseProcessingService
         $this->record($case, 'distress_check', $this->distress->check($case, $reviewContext));
         $this->syncCitations($case);
         $this->combination->recompute($case);
+        $case->update(['status' => 'pending_review']);
     }
 
-    /** @param array<string, mixed> $output */
+    /**
+     * Persist one AI pass result and refresh derived severity data.
+     *
+     * This method never changes the case workflow status. An inbound AI pass is
+     * data, not a workflow decision, and must not reopen an approved case or pull
+     * a case back out of manual handling.
+     *
+     * @param array<string, mixed> $output
+     */
     public function record(CaseRecord $case, string $passType, array $output, string $model = 'anchor-stub-v1'): AiPassResult
     {
         $result = $case->aiPassResults()->create([

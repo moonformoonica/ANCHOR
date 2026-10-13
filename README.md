@@ -6,7 +6,9 @@ Laravel 12 REST API for human-reviewed case classification and routing. AI outpu
 
 ### Local development
 
-Run `docker compose build` and `docker compose up -d`. Compose starts the local Postgres/pgvector database, applies migrations, and waits for the API health check. Load the week-one legal and referral candidates with `docker compose exec app php artisan db:seed`; all entries intentionally remain unverified and are not eligible for victim-facing routing. Check `http://localhost:8000/up` and run `docker compose exec -T app php artisan test`.
+Run `docker compose build` and `docker compose up -d`. Compose starts the local Postgres/pgvector database, applies migrations, and waits for the API health check. Load the week-one legal and referral candidates with `docker compose exec app php artisan db:seed`; seeding is re-runnable, and all entries intentionally remain unverified and are not eligible for victim-facing routing. Check `http://localhost:8000/up` and run `docker compose exec -T app php artisan test`.
+
+Both `app` and `worker` receive their database connection from `docker-compose.yml` and therefore always point at the local `postgres` service. This matters: the host `.env` may point at Supabase, and a service without its own `environment:` block silently inherits it. If you add a service, give it the same block, and check `docker compose ps -a` rather than `docker compose ps`, because exited containers are omitted from the default output.
 
 The local Docker database is for development only. Production must use the Supabase connection string supplied through deployment environment variables, then run migrations and seed only after reviewing the seed data for that environment. Never commit `.env`, API keys, or database passwords. The connection string in setup notes containing `[YOUR-PASSWORD]` is a placeholder and cannot connect until replaced locally with the database password; do not put it in source control.
 
@@ -18,9 +20,12 @@ Victim endpoints require `Authorization: Bearer <secret-token>`. The secret is r
 
 - Every API access is recorded through `AuditCaseAccess`; it records route, actor, case ID, method, and response status without copying narrative or evidence content into general logs.
 - Reject actions require `reclassify_pending` or `manual_handling`. Reclassification writes a reviewer-attributed rejection record then runs the stub passes again; no terminal `rejected` status is used.
+- Severity scoring, workflow status, and reviewer decisions are three separate concerns. `SeverityCombinationService::recompute()` only derives a `SeverityScore` and never changes case status; `CaseProcessingService::process()` owns the `pending_review` transition on the reprocessing path; `ReviewStateMachine` is the only writer of reviewer outcomes. Storing a single AI pass through `CaseProcessingService::record()` therefore cannot reopen an approved case or pull a case out of manual handling.
+- The severity tier is deterministic Laravel logic. The AI-reported `severity_signal` is used only to compute `sync_flag`, a review-prioritization hint, and does not affect the tier itself. Legal weight from the corpus does not yet participate in the formula; see [docs/research/week-1-severity-weighting-decision-brief.md](docs/research/week-1-severity-weighting-decision-brief.md).
 - Queue triage computes a historical similarity score from approved, unedited cases. It can prioritize and suggest a one-click `approve`, but it never changes case state or writes a review. The reviewer must still submit the review action.
 - `review_recommendation_confidence` and its source-case column are reserved schema hooks for phase 2 evaluation. No fast-track or auto-approval behavior exists.
 - Replace the three stub bindings in `app/Providers/AppServiceProvider.php` with real service implementations when the AI stream is ready. Keep the same interfaces and have the integration write through the internal endpoint or `CaseProcessingService`.
+- Week 1 research decisions and their unresolved items are recorded in [CHANGELOG.md](CHANGELOG.md) and [docs/research/](docs/research/).
 
 ## API contract
 

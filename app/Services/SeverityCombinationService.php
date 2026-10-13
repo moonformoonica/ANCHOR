@@ -8,6 +8,20 @@ use App\Models\SeverityScore;
 
 class SeverityCombinationService
 {
+    /**
+     * Recompute the derived severity score for a case.
+     *
+     * Contract: this method is pure derivation. It reads AI pass results and
+     * evidence, and persists a SeverityScore row. It never mutates the case
+     * workflow status, because a recomputation is caused by data arriving, not
+     * by a reviewer decision, and must not silently undo a decision that has
+     * already been made (approved, edited, or handed to manual handling).
+     *
+     * Workflow transitions are owned by CaseProcessingService::process() for
+     * the reprocessing path and by ReviewStateMachine for reviewer actions.
+     *
+     * Returns null when a required AI pass result is not available yet.
+     */
     public function recompute(CaseRecord $case): ?SeverityScore
     {
         $legal = $this->latest($case, 'legal_classification');
@@ -39,8 +53,6 @@ class SeverityCombinationService
             'sync_flag' => $syncFlag,
             'computed_at' => now(),
         ]);
-
-        $case->update(['status' => 'pending_review']);
 
         return $score;
     }

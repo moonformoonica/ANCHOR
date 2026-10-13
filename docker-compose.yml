@@ -39,6 +39,13 @@ services:
     build: .
     working_dir: /var/www/html
     volumes: [.:/var/www/html]
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: anchor
+      DB_USERNAME: anchor
+      DB_PASSWORD: anchor
     depends_on:
       app:
         condition: service_healthy
